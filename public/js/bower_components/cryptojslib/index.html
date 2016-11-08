@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title></title>
+
+	<script src="./rollups/md5.js"></script>
+	<script src="./components/enc-base64-min.js"></script>
+
+	<style type="text/css" media="screen">
+		#div_load{height: 20px;background-color: black;}	
+	</style>
+	<!-- <script src="./components/core.js"></script>
+	<script src="./components/md5.js"></script> -->
+</head>
+ 
+
+<body>  
+    <input id="input_md5" type="file" multiple="multiple"></input>  
+      
+    <div class="progress progress-striped active progress-success">  
+          <div id="div_load" style="width: 40%" class="bar"></div>  
+    </div>  
+      
+    <div id="md5_show"></div>  
+</body>  
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script type="text/javascript">  
+  
+    var message = [];  
+      
+    if(!document.getElementById("input_md5").files){  
+        message = '<p>浏览器不支持FileReader API</p>';    
+        document.querySelector("body").innerHTML = message;  
+    }else{  
+        document.getElementById('input_md5').addEventListener('change', handleFileSelection, false);  
+    }  
+      
+    function handleFileSelection(event) {  
+
+        var files = event.target.files;  
+        if(!files){  
+              msa.alert("<p>At least one selected file is invalid - do not select any folders.</p><p>Please reselect and try again.</p>");    
+              return;  
+        }  
+          
+        var file = files[0];  
+          
+        var chunkSize = 204800;  
+        var pos = 0;  
+          
+        var md5Instance = CryptoJS.algo.MD5.create();  
+          
+        var reader = new FileReader();  
+        function progressiveReadNext(){  
+            var end = Math.min(pos + chunkSize, file.size);  
+  
+            reader.onload = function(e) {  
+            	
+                pos = end;  
+                md5Instance.update(CryptoJS.enc.Latin1.parse(e.target.result));  
+                var present = (parseFloat(pos)/parseFloat(file.size))*10000/100;  
+                $("#div_load").css("width",Math.round(present) +"%");  
+                if (pos < file.size) {  
+                    progressiveReadNext();  
+                } else {  
+                    var md5Value = md5Instance.finalize();  
+                    console.log(md5Value.toString());  
+                    $("#md5_show").html(md5Value.toString());  
+                      
+                }  
+            }  
+  
+            if (file.slice) {  
+                var blob = file.slice(pos, end);  
+            } else if (file.webkitSlice) {  
+                var blob = file.webkitSlice(pos, end);  
+            }else if(File.prototype.mozSlice){  
+                var blob = file.mozSlice(pos, end);  
+            }  
+            reader.readAsBinaryString(blob);  
+        }  
+        progressiveReadNext();  
+    }  
+</script>  
+</html>
